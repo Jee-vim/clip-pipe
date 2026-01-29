@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+data/_cookies.txt
+media/local
+media/shorts
+accounts/
+session_name.session
