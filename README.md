@@ -172,5 +172,11 @@ You are responsible for:
 - Content ownership
 - Compliance with YouTube, Meta, and Telegram policies
 
+## Buy Me a Lambo
+**SOL**: E1D96h652zzTzh8QyT1Dq8AqECT3j7dbJxJMiumnBV7c
+
+**EVM**: 0x965244d54FFdf69A287e122090d320ae648f4cf8
+
 ## TODO
 - Test all social media (instagram and facebook)
+
