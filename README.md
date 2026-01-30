@@ -1,4 +1,4 @@
-# Clipper Automation Pipeline
+# Clip Pipe
 
 End-to-end automation pipeline for turning long videos into short-form content and distributing them across multiple platforms automatically.
 
