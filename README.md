@@ -8,6 +8,9 @@ Built for batch processing and unattended execution.
 
 ---
 
+## Preview
+![Preview](./media/preview.png)
+
 ## Features
 
 - Download videos from YouTube by URL
