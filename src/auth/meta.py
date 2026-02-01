@@ -1,14 +1,15 @@
 from pathlib import Path
-from dotenv import dotenv_values
+import json
 
-SRC_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = Path(__file__).resolve().parents[2]
 ACCOUNTS_DIR = SRC_ROOT / "accounts"
 
 def get_meta(account):
-    env_file = ACCOUNTS_DIR / account / "meta.env"
-    if not env_file.exists():
+    json_file = ACCOUNTS_DIR / account / "meta.json"
+    if not json_file.exists():
         raise RuntimeError(f"Meta account not available for {account}")
-    return dotenv_values(env_file)
+    with open(json_file, "r") as f:
+        return json.load(f)
 
 def get_page_token(account):
     meta = get_meta(account)

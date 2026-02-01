@@ -211,12 +211,24 @@ Short-lived tokens expire in 1 hour.
 Convert to a 60-day token:
 
 ```
-GET https://graph.facebook.com/v19.0/oauth/access_token
-  ?grant_type=fb_exchange_token
-  &client_id=APP_ID
-  &client_secret=APP_SECRET
-  &fb_exchange_token=SHORT_LIVED_TOKEN
+https://graph.facebook.com/v19.0/oauth/access_token
+?grant_type=fb_exchange_token
+&client_id=app_id
+&client_secret=secret_id
+&fb_exchange_token=EAA...
 ```
+
+
+- client_id = App ID (short-maker → 12345...)
+- client_secret = App secret from App Dashboard → Settings → Basic
+- fb_exchange_token = the short-lived user token you just generated
+
+if expired 
+- Generate a short-lived token with pages_show_list from Graph API Explorer
+- Copy it exactly (starts with EAA…)
+- Paste it into the fb_exchange_token parameter in the URL above
+- Use your App ID and App Secret from the same app
+- Open the URL in a browser or curl → you should get a JSON with access_token and expires_in
 
 Save the returned token.
 
@@ -229,20 +241,18 @@ Recommended layout:
 ```
 accounts/
 └── dopamine_drop555/
-    ├── meta.json
-    └── youtube.json
+    ├── meta.env
+    └── client_secret.json
 ```
 
 ---
 
-## meta.json
+## meta.env
 
-```json
-{
-  "page_id": "123456789",
-  "ig_user_id": "1784140xxxxxxxx",
-  "access_token": "EAAG..."
-}
+```env
+PAGE_ID=
+IG_USER_ID=
+PAGE_ACCESS_TOKEN=EAA...
 ```
 
 ---
