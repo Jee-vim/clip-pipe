@@ -5,23 +5,35 @@ import time
 import random
 from datetime import datetime
 from types import SimpleNamespace
+from dotenv import load_dotenv
 from pipeline import process_pipeline
 from pathlib import Path
+
+# Load environment variables
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 
 JSON_FILE = DATA_DIR / "_jobs.json"
-MIN_DELAY = 30          
-MAX_DELAY = 60         
 
-USE_PROXY = False  
-PROXIES = [
-    "http://user:pass@p1.example.com:8080",
-    "http://user:pass@p2.example.com:8080",
-    "http://user:pass@p3.example.com:8080"
-]
+# Load configuration from environment
+MIN_DELAY = int(os.getenv("MIN_DELAY", "30"))          
+MAX_DELAY = int(os.getenv("MAX_DELAY", "60"))         
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "30"))
+MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
+
+# Proxy configuration
+PROXIES_STR = os.getenv("PROXIES", "")
+PROXIES = [p.strip() for p in PROXIES_STR.split(",") if p.strip()] if PROXIES_STR else []
+USE_PROXY = len(PROXIES) > 0  # Auto-enable if proxies are configured
 proxy_index = 0
+
+# Telegram configuration
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID")
+TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 
 def load_jobs(path):
     try:
@@ -58,7 +70,7 @@ def print_daily_summary(schedule):
 
 def get_next_proxy():
     global proxy_index
-    if not USE_PROXY or not PROXIES:
+    if not PROXIES:
         return None
     proxy = PROXIES[proxy_index]
     proxy_index = (proxy_index + 1) % len(PROXIES)
@@ -82,8 +94,47 @@ def normalize_job(job, proxy):
         proxy=proxy
     )
 
+def send_telegram_notification(title, account, platform, link=None):
+    """Send Telegram notification for job completion."""
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        return False
+    
+    try:
+        import requests
+        
+        text = (
+            f"<b>Title:</b> {title}\n"
+            f"<b>Account:</b> {account}\n"
+            f"<b>Platform:</b> {platform}"
+        )
+        
+        if link:
+            text += f"\n<b>Link:</b> {link}"
+        
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID, 
+            "text": text,
+            "parse_mode": "HTML"
+        }
+
+        response = requests.post(url, data=payload, timeout=24)
+        response.raise_for_status()
+        print(f"\n[SUCCESS] Telegram notification sent for {platform}")
+        return True
+    except Exception as e:
+        print(f"\n[ERROR] Failed to send to Telegram: {e}")
+        return False
+
 def main():
     last_reported_date = None
+    if PROXIES:
+        print(f"[INFO] Starting job runner with {len(PROXIES)} proxies")
+    else:
+        print("[INFO] Starting job runner without proxy (PROXIES not configured)")
+    print(f"[INFO] Telegram notifications: {'Enabled' if TELEGRAM_TOKEN else 'Disabled'}")
+    
     while True:
         current_today = datetime.now().strftime("%Y-%m-%d")
         schedule = load_jobs(JSON_FILE)
@@ -91,7 +142,7 @@ def main():
             print_daily_summary(schedule)
             last_reported_date = current_today
         if not schedule:
-            time.sleep(60)
+            time.sleep(CHECK_INTERVAL)
             continue
         now_str = datetime.now().strftime("%Y-%m-%d,%H:%M")
         updated = False
@@ -104,26 +155,47 @@ def main():
                 total = len(items)
                 for i, job in enumerate(items, 1):
                     print(f"\n--- Item {i}/{total} ---")
-                    try:
-                        current_proxy = get_next_proxy()
-                        if current_proxy:
-                            print(f"[PROXY] Using: {current_proxy}")
+                    retry_count = 0
+                    success = False
+                    
+                    while retry_count <= MAX_RETRIES and not success:
+                        try:
+                            current_proxy = get_next_proxy()
+                            if current_proxy:
+                                print(f"[PROXY] Using: {current_proxy}")
+                            
+                            args_obj = normalize_job(job, current_proxy)
+                            process_pipeline(args_obj)
+                            success = True
+                            
+                            # Send Telegram notification on success
+                            job_title = job.get("title", "Unknown")
+                            job_account = job.get("account", "Unknown")
+                            send_telegram_notification(job_title, job_account, "Video Processing")
+                            
+                        except Exception as e:
+                            retry_count += 1
+                            print(f"[FAILED] Attempt {retry_count}/{MAX_RETRIES}: {e}")
+                            if retry_count <= MAX_RETRIES:
+                                wait_time = random.randint(5, 15)
+                                print(f"Retrying in {wait_time}s...")
+                                time.sleep(wait_time)
+                    
+                    if not success:
+                        print(f"[FAILED] Job failed after {MAX_RETRIES} attempts")
+                    
+                    if i < total:
+                        wait_time = random.randint(MIN_DELAY, MAX_DELAY)
+                        print(f"Waiting {wait_time}s before next job...")
+                        time.sleep(wait_time)
                         
-                        args_obj = normalize_job(job, current_proxy)
-                        process_pipeline(args_obj)
-                        if i < total:
-                            wait_time = random.randint(MIN_DELAY, MAX_DELAY)
-                            print(f"Waiting {wait_time}s...")
-                            time.sleep(wait_time)
-                    except Exception as e:
-                        print(f"[FAILED] {e}")
                 slot["status"] = "completed"
                 updated = True
                 print(f"\n[INFO] Slot {slot_time} Marked as COMPLETED")
         if updated:
             save_jobs(JSON_FILE, schedule)
             last_reported_date = None 
-        time.sleep(30)
+        time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
     try:
