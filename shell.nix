@@ -5,6 +5,7 @@ with import <nixpkgs> {}; let
       requests
       python-dotenv
       telethon
+      ollama
 
       # YouTube upload
       google-api-python-client
