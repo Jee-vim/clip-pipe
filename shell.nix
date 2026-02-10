@@ -4,8 +4,6 @@ with import <nixpkgs> {}; let
       faster-whisper
       requests
       python-dotenv
-      telethon
-      ollama
 
       # YouTube upload
       google-api-python-client
