@@ -1,8 +1,7 @@
 .venv/
 __pycache__/
-data/_cookies.txt
+data
 media/local
 media/shorts
 accounts/
 session_name.session
-_upload_stats*
