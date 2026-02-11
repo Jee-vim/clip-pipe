@@ -440,6 +440,20 @@ async function loadJobs() {
 
         async function saveJobs() {
             try {
+                // Add hashtags to descriptions before saving
+                jobsData.forEach(job => {
+                    if (job.items) {
+                        job.items.forEach(item => {
+                            if (item.description) {
+                                // Add hashtags if not already present
+                                if (!item.description.includes('#clip')) {
+                                    item.description += ' #clip #short #reels';
+                                }
+                            }
+                        });
+                    }
+                });
+
                 // Validate data before saving
                 if (!validateJobs()) {
                     return;
@@ -455,6 +469,8 @@ async function loadJobs() {
 
                 if (response.ok) {
                     showStatus('Jobs saved successfully!', 'success');
+                    // Refresh editor to show updated descriptions with hashtags
+                    renderEditor();
                 } else {
                     throw new Error('Save failed');
                 }
@@ -708,8 +724,8 @@ async function loadJobs() {
             
             jobsData[selectedJobIndex].items.push({
                 url: '',
-                start: '',
-                end: '',
+                start: '00:00',
+                end: '00:00',
                 position: 'c',
                 crop: true,
                 subs: true,
