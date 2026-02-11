@@ -313,31 +313,7 @@
             display: none;
         }
 
-        .automation-section {
-            background: var(--background);
-            padding: 12px;
-            border-radius: var(--radius);
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
-        }
 
-        .automation-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .automation-fields {
-            display: none;
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* Smooth transitions */
-        * {
-            transition: opacity 0.2s ease;
-        }
     </style>
 </head>
 <body>
@@ -571,12 +547,7 @@ async function loadJobs() {
                            onchange="updateJobDate()">
                 </div>
                 
-                <div class="automation-section">
-                    <div class="automation-checkbox">
-                        <input type="checkbox" id="automateFields" onchange="toggleAutomation()">
-                        <label for="automateFields">Auto-generate titles, descriptions, and timing</label>
-                    </div>
-                </div>
+
 
                 <h3>Items</h3>
                 <button class="btn btn-primary" onclick="addItem()">Add Item</button>
@@ -586,12 +557,7 @@ async function loadJobs() {
                 </div>
             `;
             
-            // Initialize position visibility for all items after rendering
-            setTimeout(() => {
-                if (job.items) {
-                    job.items.forEach((_, index) => togglePosition(index));
-                }
-            }, 50);
+
         }
 
         function renderItem(item, index) {
@@ -785,97 +751,7 @@ async function loadJobs() {
             preview.classList.toggle('show');
         }
 
-        function toggleAutomation() {
-            const automateCheckbox = document.getElementById('automateFields');
-            const isAutomated = automateCheckbox.checked;
-            
-            if (selectedJobIndex === null) return;
-            
-            const job = jobsData[selectedJobIndex];
-            if (!job.items) return;
-            
-            // Toggle visibility of automation-targeted fields
-            job.items.forEach((_, index) => {
-                const timeGroup = document.getElementById(`time_group_${index}`);
-                const titleGroup = document.getElementById(`title_group_${index}`);
-                const descriptionGroup = document.getElementById(`description_group_${index}`);
-                
-                if (isAutomated) {
-                    timeGroup.classList.add('automation-fields');
-                    titleGroup.classList.add('automation-fields');
-                    descriptionGroup.classList.add('automation-fields');
-                } else {
-                    timeGroup.classList.remove('automation-fields');
-                    titleGroup.classList.remove('automation-fields');
-                    descriptionGroup.classList.remove('automation-fields');
-                }
-            });
-            
-            // If automation is enabled, auto-generate content
-            if (isAutomated) {
-                autoGenerateContent();
-            }
-            
-            updateJSONPreview();
-        }
 
-        async function autoGenerateContent() {
-            if (selectedJobIndex === null) return;
-            
-            const job = jobsData[selectedJobIndex];
-            if (!job.items) return;
-            
-            for (let i = 0; i < job.items.length; i++) {
-                const item = job.items[i];
-                
-                if (!item.url && !item.url.trim()) continue;
-                
-                try {
-                    // Call server endpoint to generate content
-                    const response = await fetch('/api/auto-generate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            video_url: item.url,
-                            video_path: item.url // For local files
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const generated = await response.json();
-                        
-                        // Update item with generated content
-                        item.title = generated.title;
-                        item.description = generated.description;
-                        item.start = generated.start || "00:00:10";
-                        item.end = generated.end || "00:01:00";
-                        
-                        // Update form fields
-                        const titleField = document.getElementById(`title_${i}`);
-                        const descriptionField = document.getElementById(`description_${i}`);
-                        const startField = document.getElementById(`start_${i}`);
-                        const endField = document.getElementById(`end_${i}`);
-                        
-                        if (titleField) titleField.value = generated.title;
-                        if (descriptionField) descriptionField.value = generated.description;
-                        if (startField) startField.value = generated.start || "00:00:10";
-                        if (endField) endField.value = generated.end || "00:01:00";
-                    }
-                } catch (error) {
-                    console.error('Auto-generation failed:', error);
-                    // Fallback to basic generation
-                    item.title = "Video Keren: Konten Menarik!";
-                    item.description = "Halo guys! Simak video special ini! Jangan lupa like dan share ya! 🎯 #clip #short #reels #viralindonesia #trending";
-                    item.start = "00:00:10";
-                    item.end = "00:01:00";
-                }
-            }
-            
-            updateJSONPreview();
-            showStatus('Content auto-generated successfully!', 'success');
-        }
 
         function updateJSONPreview() {
             const preview = document.getElementById('jsonPreview');
