@@ -349,21 +349,13 @@
     <div class="container">
         <div class="left-panel">
             <h2>Job Slots</h2>
-            <div style="margin-bottom: 10px;">
-                <button class="btn btn-primary" onclick="addJobSlot()">Add Job Slot</button>
-                <button class="btn btn-secondary" onclick="loadJobs()">Reload</button>
-            </div>
             <div id="jobList"></div>
+            <div style="margin-top: 10px;">
+                <button class="btn btn-primary" onclick="addJobSlot()">Add Job Slot</button>
+            </div>
         </div>
         
         <div class="right-panel">
-            <div class="toolbar">
-                <button class="btn btn-success" onclick="saveJobs()">Save to _jobs.json</button>
-                <button class="btn btn-secondary" onclick="loadJobs()">Reload</button>
-                <button class="btn btn-secondary" onclick="toggleJSONPreview()">Toggle JSON</button>
-                <span id="status"></span>
-            </div>
-            
             <div class="editor" id="editor">
                 <div class="empty-state">
                     Select a job slot to edit or create a new one
@@ -373,6 +365,12 @@
             <div class="json-preview">
                 <h3>JSON Preview</h3>
                 <pre id="jsonPreview">{}</pre>
+            </div>
+            
+            <div class="toolbar">
+                <button class="btn btn-success" onclick="saveJobs()">Save to _jobs.json</button>
+                <button class="btn btn-secondary" onclick="toggleJSONPreview()">Toggle JSON</button>
+                <span id="status"></span>
             </div>
         </div>
     </div>
@@ -634,10 +632,13 @@ async function loadJobs() {
                 </div>
 
                 <h3>Items</h3>
-                <button class="btn btn-primary" onclick="addItem()">Add Item</button>
                 
-                <div id="itemsList" style="margin-top: 15px;">
+                <div id="itemsList">
                     ${job.items ? job.items.map((item, itemIndex) => renderItem(item, itemIndex)).join('') : ''}
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="addItem()">Add Item</button>
                 </div>
             `;
             
@@ -671,7 +672,7 @@ async function loadJobs() {
                         </div>
                     </div>
 
-                    <div class="form-group" id="position_group_${index}">
+                    <div class="form-group" id="position_group_${index}" style="display: ${item.crop === false ? 'none' : 'block'};">
                         <label>Position:</label>
                         <select id="position_${index}" onchange="updateItem(${index})">
                             <option value="c" ${item.position === 'c' ? 'selected' : ''}>Center</option>
@@ -903,7 +904,7 @@ async function loadJobs() {
                 start: '00:00',
                 end: '00:00',
                 position: 'c',
-                crop: true,
+                crop: false,
                 subs: true,
                 brainrot: false,
                 tests: false,
