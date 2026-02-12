@@ -188,7 +188,7 @@ def generate_hashtags():
     return base_hashtags[0] + " " + " ".join(selected)
 
 
-def auto_generate_jobs_from_media(media_dir, output_file="_jobs.json"):
+def auto_generate_jobs_from_media(media_dir, account="obrolan_clip", output_file="_jobs.json"):
     """Automatically generate _jobs.json from media files"""
     media_path = Path(media_dir)
     if not media_path.exists():
@@ -221,7 +221,7 @@ def auto_generate_jobs_from_media(media_dir, output_file="_jobs.json"):
             "subs": True,
             "brainrot": False,
             "tests": False,
-            "account": "obrolan_clip",
+            "account": account,
             "title": content["title"],
             "description": content["description"]
         }
